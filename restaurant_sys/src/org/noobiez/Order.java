@@ -6,18 +6,15 @@ import java.util.*;
 
 public class Order 
 {
-	protected int orderNumber;
+	protected int tableNumber;
 	protected static double totalPriceOfOrder;
 	protected static Vector<String[]> orderList;
 	protected static String[][] arrayTest;
 	protected static String itemTotalDisplay;
 	
-	public Order()
+	public Order(int tableNum)
 	{
-		if (orderNumber == 0)
-			orderNumber = 1;
-		else
-			orderNumber += orderNumber;
+		tableNumber = tableNum;
 		
 		totalPriceOfOrder = 0;
 		
@@ -29,14 +26,14 @@ public class Order
 		return orderList;
 	}
 	
-	public void addItem(String itemName, int qty) throws IOException
+	public void addItem(String tableNumber, String itemName, int qty) throws IOException
 	{
 		FoodItem item = new FoodItem(itemName);
 		totalPriceOfOrder += item.getPrice() * qty;
 		Double itemTotal = item.getPrice() * qty;
 		DecimalFormat twoDForm = new DecimalFormat(Messages.Order_decimalFormat);
         itemTotalDisplay = twoDForm.format(itemTotal);
-		String[] itemDetails = {Integer.toString(this.orderNumber), Integer.toString(qty), item.getName(), itemTotalDisplay};
+		String[] itemDetails = {"TABLE" + tableNumber, Integer.toString(qty), item.getName(), itemTotalDisplay};
 		orderList.add(itemDetails);
 		writeOrderDetails(itemDetails);
 	}
@@ -60,9 +57,9 @@ public class Order
 		cin.close();
 	}
 	
-	public int getOrderNumber()
+	public int getTableNumber()
 	{
-		return orderNumber;
+		return tableNumber;
 	}
 	
 	public String getPriceAsString()

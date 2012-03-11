@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Label;
 
 
 public class ServerView {
@@ -23,6 +24,7 @@ public class ServerView {
 	private Table table;
 	protected Combo cmbQty;
 	protected Combo cmbBurgers;
+	protected Combo cmbTableNum;
 	private static String userName;
 	private Button btnCancelItem;
 
@@ -71,20 +73,36 @@ public class ServerView {
 		btnAdd.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Order newOrder = new Order();
-				try {
-					newOrder.addItem(cmbBurgers.getText(), Integer.valueOf(cmbQty.getText()));
-				} catch (NumberFormatException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				if (!cmbTableNum.getText().equals("") && !cmbBurgers.getText().equals(""))	//Check to make sure table is selected
+				{
+					Order newOrder = new Order(Integer.valueOf(cmbTableNum.getText()));
+					try {
+						newOrder.addItem(cmbTableNum.getText(), cmbBurgers.getText(), Integer.valueOf(cmbQty.getText()));
+					} catch (NumberFormatException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+						TableItem tableItem = new TableItem(table, SWT.NONE);
+						String[] orderDetails = {Integer.toString(newOrder.getTableNumber()),cmbQty.getText(),
+								cmbBurgers.getText(), newOrder.getPriceAsString()};
+						tableItem.setText(orderDetails);
+						
+						//Populate the Table with previous orders
+						/*
+						try {
+							populateTable(table, Integer.valueOf(cmbTableNum.getText()));
+						} catch (NumberFormatException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (FileNotFoundException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}*/
+					}
 				}
-				TableItem tableItem = new TableItem(table, SWT.NONE);
-				String[] orderDetails = {Integer.toString(newOrder.getOrderNumber()),cmbQty.getText(),cmbBurgers.getText(), newOrder.getPriceAsString()};
-				tableItem.setText(orderDetails);
-			}
 		});
 		btnAdd.setBounds(173, 62, 75, 25);
 		btnAdd.setText("Add");
@@ -96,7 +114,7 @@ public class ServerView {
 		
 		TableColumn tblclmnOrder = new TableColumn(table, SWT.NONE);
 		tblclmnOrder.setWidth(59);
-		tblclmnOrder.setText("Order #");
+		tblclmnOrder.setText("Table #");
 		
 		TableColumn tblclmnQty = new TableColumn(table, SWT.NONE);
 		tblclmnQty.setWidth(40);
@@ -110,9 +128,6 @@ public class ServerView {
 		tblclmnPrice.setWidth(100);
 		tblclmnPrice.setText("Price");
 		
-		//Populate the Table with previous orders
-		populateTable(table);
-		
 		btnCancelItem = new Button(shell, SWT.NONE);
 		btnCancelItem.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -123,8 +138,9 @@ public class ServerView {
 				{
 					TableItem temp = table.getItem(selection);
 					String lineToRemove = "";
+					lineToRemove = "TABLE" + temp.getText(0) + " ";
 					
-					for (int i = 0; i < 4; ++i)
+					for (int i = 1; i < 4; ++i)
 					{
 						lineToRemove += temp.getText(i) + " ";
 					}
@@ -163,28 +179,60 @@ public class ServerView {
 		});
 		btnLogOut.setBounds(519, 290, 75, 25);
 		btnLogOut.setText("Log Out");
+		
+		cmbTableNum = new Combo(shell, SWT.NONE);
+		cmbTableNum.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					populateTable(table, 1 + cmbTableNum.getSelectionIndex());
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		cmbTableNum.setItems(new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9"});
+		cmbTableNum.setBounds(36, 22, 39, 23);
+		
+		Label lblTable = new Label(shell, SWT.NONE);
+		lblTable.setBounds(36, 10, 55, 15);
+		lblTable.setText("Table #");
+		
+		Label lblFood = new Label(shell, SWT.NONE);
+		lblFood.setText("Food");
+		lblFood.setBounds(36, 51, 55, 15);
 
 	}
 	
 	/**
 	 * This method populates the table in the current view with the current orders.
-	 * @param table- the table that is going to be repopulated
+	 * @param table- the table that is going to be re-populated
 	 * @throws FileNotFoundException
 	 */
-	private void populateTable(Table table) throws FileNotFoundException
+	private void populateTable(Table table, int tableNum) throws FileNotFoundException
 	{
+		table.removeAll();
+		
 		File orderFile = new File(System.getProperty("user.dir") + "\\orders.dat");
 		Scanner cin = new Scanner(orderFile);
+		String temp = "";
 		
 		while (cin.hasNext())
-		{
-			TableItem tableItem = new TableItem(table, SWT.NONE);
-			String[] orderDetails = new String[4];
+		{	
+			temp = cin.next();
 			
-			for (int i = 0; i < 4; ++i)
-				orderDetails[i] = cin.next();
-			
-			tableItem.setText(orderDetails);
+			if (temp.equals("TABLE" + tableNum))
+			{
+				TableItem tableItem = new TableItem(table, SWT.NONE);
+				String[] orderDetails = new String[4];
+				orderDetails[0] = Integer.toString(tableNum);
+				
+				for (int i = 1; i < 4; ++i)
+					orderDetails[i] = cin.next();
+				
+				tableItem.setText(orderDetails);
+			}
 		}
 		
 		cin.close();
